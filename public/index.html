@@ -216,8 +216,32 @@
       <div class="settings-card">
         <h3>🔔 התראות</h3>
         <div class="setting-row">
-          <div class="setting-row"><span>הפעל התראות לנייד</span><button onclick="handleNotifyBtn()" id="notify-btn2" style="padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;background:var(--green);color:white;font-weight:500">הפעל</button></div><div class="setting-row"><span>שלח התראת בדיקה</span>
+          <span>הפעל התראות לנייד</span>
+          <button onclick="handleNotifyBtn()" id="notify-btn2" style="padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;background:var(--green);color:white;font-weight:500">הפעל</button>
+        </div>
+        <div class="setting-row">
+          <span>שלח התראת בדיקה</span>
           <button onclick="testPush()" style="padding:7px 14px;font-size:12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--bg)">שלח</button>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3>📅 Google Calendar</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">חבר את היומן שלך — התורנויות יתווספו אוטומטית</p>
+        <div class="setting-row">
+          <span>יובל</span>
+          <button onclick="connectCalendar('יובל')" id="cal-yuval" style="padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;background:var(--blue);color:white;font-weight:500">חבר יומן</button>
+        </div>
+        <div class="setting-row">
+          <span>עומר</span>
+          <button onclick="connectCalendar('עומר')" id="cal-omer" style="padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;background:var(--blue);color:white;font-weight:500">חבר יומן</button>
+        </div>
+        <div class="setting-row">
+          <span>יריב</span>
+          <button onclick="connectCalendar('יריב')" id="cal-yariv" style="padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;background:var(--blue);color:white;font-weight:500">חבר יומן</button>
+        </div>
+        <div class="setting-row">
+          <span>שירה</span>
+          <button onclick="connectCalendar('שירה')" id="cal-shira" style="padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;background:var(--blue);color:white;font-weight:500">חבר יומן</button>
         </div>
       </div>
     </div>

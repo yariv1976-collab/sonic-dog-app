@@ -310,3 +310,24 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 init();
+
+// ─── Google Calendar ──────────────────────────────────────────────────────────
+async function checkCalendarStatuses() {
+  const people = ['יובל','עומר','יריב','שירה'];
+  const ids = ['cal-yuval','cal-omer','cal-yariv','cal-shira'];
+  for (let i = 0; i < people.length; i++) {
+    try {
+      const r = await fetch('/api/calendar-status/' + encodeURIComponent(people[i]));
+      const d = await r.json();
+      const btn = document.getElementById(ids[i]);
+      if (btn && d.connected) {
+        btn.textContent = '✅ מחובר';
+        btn.style.background = 'var(--gray)';
+      }
+    } catch {}
+  }
+}
+
+function connectCalendar(person) {
+  window.location.href = '/auth/google/' + encodeURIComponent(person);
+}
