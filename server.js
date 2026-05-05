@@ -180,6 +180,22 @@ async function syncCalendarForPerson(personName) {
 }
 
 // ─── Auth routes ──────────────────────────────────────────────────────────────
+app.get('/api/auth/google/callback', async (req, res) => {
+  const { code, state: person } = req.query;
+  try {
+    const oauth2 = createOAuthClient();
+    const { tokens } = await oauth2.getToken(code);
+    const allTokens = loadTokens();
+    allTokens[person] = tokens;
+    saveTokens(allTokens);
+    await syncCalendarForPerson(person);
+    res.send('<html><body dir="rtl" style="font-family:sans-serif;text-align:center;padding:40px"><h2>✅ היומן חובר בהצלחה!</h2><p>התורנויות של ' + person + ' נוספו ל-Google Calendar.</p><p><a href="/">חזור לאפליקציה</a></p></body></html>');
+  } catch(e) {
+    console.error('OAuth callback error:', e);
+    res.send('<html><body dir="rtl" style="font-family:sans-serif;text-align:center;padding:40px"><h2>❌ שגיאה</h2><p>' + e.message + '</p><a href="/">חזור</a></body></html>');
+  }
+});
+
 app.get('/api/auth/google/:person', (req, res) => {
   const person = decodeURIComponent(req.params.person);
   const oauth2 = createOAuthClient();
@@ -190,23 +206,6 @@ app.get('/api/auth/google/:person', (req, res) => {
     prompt: 'consent',
   });
   res.redirect(url);
-});
-
-app.get('/api/auth/google/callback', async (req, res) => {
-  const { code, state: person } = req.query;
-  try {
-    const oauth2 = createOAuthClient();
-    const { tokens } = await oauth2.getToken(code);
-    const allTokens = loadTokens();
-    allTokens[person] = tokens;
-    saveTokens(allTokens);
-    // Sync calendar immediately
-    await syncCalendarForPerson(person);
-    res.send('<html><body dir="rtl" style="font-family:sans-serif;text-align:center;padding:40px"><h2>✅ היומן חובר בהצלחה!</h2><p>התורנויות של ' + person + ' נוספו ל-Google Calendar.</p><p><a href="/">חזור לאפליקציה</a></p></body></html>');
-  } catch(e) {
-    console.error('OAuth callback error:', e);
-    res.send('<html><body dir="rtl" style="font-family:sans-serif;text-align:center;padding:40px"><h2>❌ שגיאה</h2><p>' + e.message + '</p><a href="/">חזור</a></body></html>');
-  }
 });
 
 // ─── API routes ───────────────────────────────────────────────────────────────
