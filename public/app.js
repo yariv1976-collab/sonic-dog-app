@@ -329,5 +329,5 @@ async function checkCalendarStatuses() {
 }
 
 function connectCalendar(person) {
-  window.location.href = '/auth/google/' + encodeURIComponent(person);
+  window.location.href = '/api/auth/google/' + encodeURIComponent(person);
 }

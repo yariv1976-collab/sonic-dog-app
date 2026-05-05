@@ -21,7 +21,7 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
 const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID     || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const BASE_URL             = process.env.BASE_URL || 'https://sonic-dog-app.onrender.com';
-const REDIRECT_URI         = BASE_URL + '/auth/google/callback';
+const REDIRECT_URI         = BASE_URL + '/api/auth/google/callback';
 
 function createOAuthClient() {
   return new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URI);
@@ -180,7 +180,7 @@ async function syncCalendarForPerson(personName) {
 }
 
 // ─── Auth routes ──────────────────────────────────────────────────────────────
-app.get('/auth/google/:person', (req, res) => {
+app.get('/api/auth/google/:person', (req, res) => {
   const person = decodeURIComponent(req.params.person);
   const oauth2 = createOAuthClient();
   const url = oauth2.generateAuthUrl({
@@ -192,7 +192,7 @@ app.get('/auth/google/:person', (req, res) => {
   res.redirect(url);
 });
 
-app.get('/auth/google/callback', async (req, res) => {
+app.get('/api/auth/google/callback', async (req, res) => {
   const { code, state: person } = req.query;
   try {
     const oauth2 = createOAuthClient();
