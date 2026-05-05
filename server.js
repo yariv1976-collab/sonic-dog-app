@@ -172,7 +172,15 @@ app.post('/api/schedule/swap', (req, res) => {
   res.json({ ok: true, schedule: scheduleData });
 });
 
-// Get VAPID public key
+// Update single cell
+app.post('/api/schedule/update', (req, res) => {
+  const { task, dayIdx, person } = req.body;
+  if (!scheduleData[task]) return res.status(400).json({ error: 'invalid task' });
+  scheduleData[task][dayIdx] = person;
+  res.json({ ok: true });
+});
+
+
 app.get('/api/vapid-key', (req, res) => res.json({ key: VAPID_PUBLIC }));
 
 // Test push (dev only)

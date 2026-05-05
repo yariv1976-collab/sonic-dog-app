@@ -126,7 +126,8 @@ function renderWeekTable() {
     html += `<tr><td class="row-lbl">${TASK_HE[task]}</td>`;
     DAYS.forEach((d, i) => {
       const p = schedule[task][i];
-      html += `<td class="${i === todayIdx ? 'today-col' : ''}"><span class="badge ${personClass(p)}">${p}</span></td>`;
+      const todayCls = i === todayIdx ? 'today-col' : '';
+      html += `<td class="${todayCls} clickable" onclick="openModal('${task}',${i})"><span class="badge ${personClass(p)}">${p}</span></td>`;
     });
     html += '</tr>';
   });
@@ -134,16 +135,7 @@ function renderWeekTable() {
   document.getElementById('week-table').innerHTML = html;
 }
 
-function populateSwaps() {
-  const taskSel = document.getElementById('swap-task');
-  taskSel.innerHTML = ['morning','noon','evening','teeth','sleep'].map(t =>
-    `<option value="${t}">${TASK_HE[t]}</option>`
-  ).join('');
-  const dayOpts = DAYS.map((d, i) => `<option value="${i}">יום ${d}</option>`).join('');
-  document.getElementById('swap-day1').innerHTML = dayOpts;
-  document.getElementById('swap-day2').innerHTML = dayOpts;
-  document.getElementById('swap-day2').value = 1;
-}
+function populateSwaps() {}
 
 // ─── Interactions ─────────────────────────────────────────────────────────────
 function showTab(name, el) {
@@ -162,29 +154,54 @@ function selectPerson(name, el) {
   updateNotifyBtn();
 }
 
-async function doSwap() {
-  const task = document.getElementById('swap-task').value;
-  const day1 = parseInt(document.getElementById('swap-day1').value);
-  const day2 = parseInt(document.getElementById('swap-day2').value);
-  if (day1 === day2) { showToast('בחר שני ימים שונים'); return; }
+// ─── Modal ────────────────────────────────────────────────────────────────────
+let modalState = { task: null, dayIdx: null, selected: null };
+
+function openModal(task, dayIdx) {
+  const current = schedule[task][dayIdx];
+  modalState = { task, dayIdx, selected: current };
+
+  document.getElementById('modal-title').textContent = `${TASK_HE[task]} — יום ${DAYS[dayIdx]}`;
+  document.getElementById('modal-sub').textContent = `אחראי נוכחי: ${current}`;
+
+  const persons = ['יובל', 'עומר', 'הורים'];
+  document.getElementById('modal-persons').innerHTML = persons.map(p => `
+    <button class="person-option ${personClass(p)} ${p === current ? 'selected' : ''}"
+      onclick="selectModalPerson('${p}', this)">${p}</button>
+  `).join('');
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function selectModalPerson(name, el) {
+  document.querySelectorAll('.person-option').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  modalState.selected = name;
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+async function saveModal() {
+  const { task, dayIdx, selected } = modalState;
+  if (!selected) return;
+
+  schedule[task][dayIdx] = selected;
 
   try {
-    const r = await fetch('/api/schedule/swap', {
+    await fetch('/api/schedule/update', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ task, day1, day2 })
+      body: JSON.stringify({ task, dayIdx, person: selected })
     });
-    const data = await r.json();
-    schedule = data.schedule;
-    renderAll();
-    showToast('✅ ההחלפה בוצעה!');
-  } catch {
-    // fallback: local swap
-    const tmp = schedule[task][day1];
-    schedule[task][day1] = schedule[task][day2];
-    schedule[task][day2] = tmp;
-    renderAll();
-    showToast('✅ ההחלפה בוצעה (מקומי)');
-  }
+  } catch {}
+
+  closeModalDirect();
+  renderAll();
+  showToast('✅ עודכן!');
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

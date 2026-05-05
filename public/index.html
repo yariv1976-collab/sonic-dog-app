@@ -94,18 +94,35 @@
     /* Conflict */
     .conflict { background: #FAECE7; border: 1px solid #F0997B; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; color: #993C1D; }
 
-    /* Swap */
-    .section-title { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
-    .swap-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
-    .swap-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .field { display: flex; flex-direction: column; gap: 4px; }
-    .field label { font-size: 11px; color: var(--text2); }
     select { font-size: 13px; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); width: 100%; }
-    .swap-btn {
-      width: 100%; padding: 12px; background: var(--green); color: white; border: none;
-      border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 50; align-items: center; justify-content: center; padding: 20px;
     }
-    .swap-btn:active { opacity: 0.85; transform: scale(0.98); }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: var(--radius); padding: 20px;
+      width: 100%; max-width: 320px;
+    }
+    .modal-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+    .modal-sub { font-size: 12px; color: var(--text2); margin-bottom: 16px; }
+    .person-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .person-option {
+      padding: 12px; border-radius: 10px; border: 2px solid transparent;
+      font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .person-option.yuval  { background: var(--green-light); color: var(--green-dark); }
+    .person-option.omer   { background: var(--blue-light);  color: var(--blue-dark); }
+    .person-option.parents{ background: var(--amber-light); color: var(--amber-dark); }
+    .person-option.selected { border-color: currentColor; transform: scale(1.04); }
+    .modal-actions { display: flex; gap: 8px; }
+    .modal-cancel { flex: 1; padding: 11px; border: 1px solid var(--border); background: none; border-radius: 10px; font-size: 13px; cursor: pointer; }
+    .modal-save { flex: 2; padding: 11px; background: var(--green); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 500; cursor: pointer; }
+
+    td.clickable { cursor: pointer; }
+    td.clickable:hover .badge { opacity: 0.75; }
 
     /* Today panel */
     .today-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 10px; overflow: hidden; }
@@ -177,18 +194,7 @@
           <table id="week-table"></table>
         </div>
       </div>
-      <div class="section-title">החלפת תורנות</div>
-      <div class="swap-card">
-        <div class="field" style="margin-bottom:10px">
-          <label>פעולה</label>
-          <select id="swap-task"></select>
-        </div>
-        <div class="swap-row">
-          <div class="field"><label>יום ראשון</label><select id="swap-day1"></select></div>
-          <div class="field"><label>יום שני</label><select id="swap-day2"></select></div>
-        </div>
-        <button class="swap-btn" onclick="doSwap()">החלף ↕</button>
-      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px;margin-top:-8px;">לחץ על כל תא בטבלה כדי לשנות אחראי</p>
     </div>
 
     <!-- SETTINGS -->
@@ -213,6 +219,19 @@
           <span>שלח התראת בדיקה</span>
           <button onclick="testPush()" style="padding:7px 14px;font-size:12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--bg)">שלח</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Swap Modal -->
+  <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-sub" id="modal-sub"></div>
+      <div class="person-grid" id="modal-persons"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModalDirect()">ביטול</button>
+        <button class="modal-save" onclick="saveModal()">שמור</button>
       </div>
     </div>
   </div>
