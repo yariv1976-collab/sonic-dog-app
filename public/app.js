@@ -246,14 +246,11 @@ async function registerSW() {
 }
 
 function updateNotifyBtn() {
-  const btn = document.getElementById('notify-btn');
-  if (!('Notification' in window)) { btn.style.display = 'none'; return; }
-  if (Notification.permission === 'granted' && currentPerson) {
-    btn.textContent = '🔔 התראות פעילות';
-    btn.classList.add('subscribed');
-  } else {
-    btn.textContent = '🔔 הפעל התראות';
-    btn.classList.remove('subscribed');
+  const btn2 = document.getElementById('notify-btn2');
+  const granted = ('Notification' in window) && Notification.permission === 'granted' && currentPerson;
+  if (btn2) {
+    btn2.textContent = granted ? '✅ פעיל' : 'הפעל';
+    btn2.style.background = granted ? 'var(--gray)' : 'var(--green)';
   }
 }
 
