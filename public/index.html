@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1D9E75">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="סוניק">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <title>סוניק 🐕</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #0F6E56;
+      --blue: #378ADD;  --blue-light: #E6F1FB;  --blue-dark: #185FA5;
+      --amber: #BA7517; --amber-light: #FAEEDA; --amber-dark: #854F0B;
+      --red: #E24B4A;   --red-light: #FCEBEB;
+      --gray: #888780;  --gray-light: #F1EFE8;  --gray-dark: #444441;
+      --bg: #f8f8f6; --surface: #ffffff; --border: rgba(0,0,0,0.1);
+      --text: #1a1a18; --text2: #5f5e5a; --radius: 12px;
+    }
+    body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; }
+
+    .app-header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 16px 20px 0; position: sticky; top: 0; z-index: 10;
+    }
+    .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .dog-icon { font-size: 28px; }
+    .header-top h1 { font-size: 20px; font-weight: 600; }
+    .header-top p  { font-size: 12px; color: var(--text2); margin-top: 1px; }
+    .notify-btn {
+      margin-right: auto; padding: 6px 14px; background: var(--green); color: white;
+      border: none; border-radius: 20px; font-size: 12px; cursor: pointer;
+    }
+    .notify-btn.subscribed { background: var(--gray-light); color: var(--gray-dark); }
+
+    .tabs { display: flex; gap: 0; }
+    .tab {
+      flex: 1; padding: 10px 4px; background: none; border: none; font-size: 13px;
+      color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .tab.active { color: var(--green-dark); border-bottom-color: var(--green); font-weight: 500; }
+
+    .content { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Person selector */
+    .person-select-card {
+      background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);
+      padding: 16px; margin-bottom: 16px;
+    }
+    .person-select-card label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 8px; }
+    .person-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .person-btn {
+      padding: 8px 16px; border-radius: 20px; border: 1.5px solid transparent;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+    }
+    .person-btn.yuval  { background: var(--green-light); color: var(--green-dark); }
+    .person-btn.omer   { background: var(--blue-light);  color: var(--blue-dark);  }
+    .person-btn.yariv  { background: var(--amber-light); color: var(--amber-dark); }
+    .person-btn.shira  { background: var(--amber-light); color: var(--amber-dark); }
+    .person-btn.active { border-color: currentColor; transform: scale(1.05); }
+
+    /* Summary cards */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .sum-card { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); padding: 12px; text-align: center; }
+    .sum-card .num { font-size: 24px; font-weight: 600; }
+    .sum-card .lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .sum-card.yuval .num { color: var(--green-dark); }
+    .sum-card.omer  .num { color: var(--blue-dark); }
+    .sum-card.parents .num { color: var(--amber-dark); }
+
+    /* Week table */
+    .week-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 16px; }
+    .week-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { background: var(--gray-light); padding: 8px 4px; text-align: center; font-weight: 500; color: var(--text2); font-size: 11px; }
+    th.today-col { background: var(--blue-light); color: var(--blue-dark); }
+    td { padding: 7px 4px; text-align: center; border-top: 1px solid var(--border); }
+    td.row-lbl { text-align: right; padding-right: 10px; font-size: 11px; color: var(--text2); white-space: nowrap; }
+    td.today-col { background: rgba(55,138,221,0.06); }
+
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .badge.yuval   { background: var(--green-light); color: var(--green-dark); }
+    .badge.omer    { background: var(--blue-light);  color: var(--blue-dark); }
+    .badge.parents { background: var(--amber-light); color: var(--amber-dark); }
+
+    /* Conflict */
+    .conflict { background: #FAECE7; border: 1px solid #F0997B; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; color: #993C1D; }
+
+    /* Swap */
+    .section-title { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+    .swap-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
+    .swap-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; color: var(--text2); }
+    select { font-size: 13px; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); width: 100%; }
+    .swap-btn {
+      width: 100%; padding: 12px; background: var(--green); color: white; border: none;
+      border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .swap-btn:active { opacity: 0.85; transform: scale(0.98); }
+
+    /* Today panel */
+    .today-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 10px; overflow: hidden; }
+    .today-header { padding: 12px 16px; font-weight: 500; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .today-time { font-size: 12px; color: var(--text2); }
+    .today-person { padding: 0 16px 14px; }
+    .wa-link {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 10px; padding: 11px; background: #25D366; color: white;
+      text-decoration: none; border-radius: 10px; font-size: 13px; font-weight: 500;
+    }
+
+    /* Settings */
+    .settings-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; }
+    .settings-card h3 { font-size: 14px; font-weight: 500; margin-bottom: 14px; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px; }
+    .setting-row:last-child { margin-bottom: 0; }
+    input[type=tel], input[type=time] { font-size: 13px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); direction: ltr; }
+    input[type=tel] { width: 150px; }
+    input[type=time] { width: 90px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: #2C2C2A; color: white; padding: 10px 20px; border-radius: 20px;
+      font-size: 13px; transition: transform 0.3s; z-index: 100; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="app-header">
+    <div class="header-top">
+      <div class="dog-icon">🐕</div>
+      <div>
+        <h1>סוניק</h1>
+        <p>ניהול תורנויות</p>
+      </div>
+      <button class="notify-btn" id="notify-btn" onclick="handleNotifyBtn()">🔔 הפעל התראות</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('today',this)">היום</button>
+      <button class="tab" onclick="showTab('schedule',this)">לוח שבועי</button>
+      <button class="tab" onclick="showTab('settings',this)">הגדרות</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- TODAY -->
+    <div id="panel-today" class="panel active">
+      <div id="conflict-area"></div>
+      <div class="person-select-card">
+        <label>מי אתה?</label>
+        <div class="person-btns">
+          <button class="person-btn yuval"  onclick="selectPerson('יובל',this)">יובל</button>
+          <button class="person-btn omer"   onclick="selectPerson('עומר',this)">עומר</button>
+          <button class="person-btn yariv"  onclick="selectPerson('יריב',this)">יריב</button>
+          <button class="person-btn shira"  onclick="selectPerson('שירה',this)">שירה</button>
+        </div>
+      </div>
+      <div id="today-tasks"></div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div id="panel-schedule" class="panel">
+      <div class="summary-grid" id="summary-grid"></div>
+      <div class="week-card">
+        <div class="week-scroll">
+          <table id="week-table"></table>
+        </div>
+      </div>
+      <div class="section-title">החלפת תורנות</div>
+      <div class="swap-card">
+        <div class="field" style="margin-bottom:10px">
+          <label>פעולה</label>
+          <select id="swap-task"></select>
+        </div>
+        <div class="swap-row">
+          <div class="field"><label>יום ראשון</label><select id="swap-day1"></select></div>
+          <div class="field"><label>יום שני</label><select id="swap-day2"></select></div>
+        </div>
+        <button class="swap-btn" onclick="doSwap()">החלף ↕</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="panel-settings" class="panel">
+      <div class="settings-card">
+        <h3>📱 מספרי טלפון</h3>
+        <div class="setting-row"><span>יובל</span><input type="tel" id="p-yuval" value="0584997372" onchange="saveSettings()"></div>
+        <div class="setting-row"><span>עומר</span><input type="tel" id="p-omer"  value="0584271372" onchange="saveSettings()"></div>
+        <div class="setting-row"><span>יריב</span><input type="tel" id="p-yariv" value="0542271372" onchange="saveSettings()"></div>
+        <div class="setting-row"><span>שירה</span><input type="tel" id="p-shira" value="0544997372" onchange="saveSettings()"></div>
+      </div>
+      <div class="settings-card">
+        <h3>⏰ זמני פעולות</h3>
+        <div class="setting-row"><span>הוצאת בוקר</span> <input type="time" id="t-morning" value="08:00" onchange="saveSettings()"></div>
+        <div class="setting-row"><span>הוצאת צהריים</span><input type="time" id="t-noon"    value="14:30" onchange="saveSettings()"></div>
+        <div class="setting-row"><span>הוצאת ערב</span>  <input type="time" id="t-evening" value="20:00" onchange="saveSettings()"></div>
+        <div class="setting-row"><span>צחצוח שיניים</span><input type="time" id="t-teeth"   value="21:00" onchange="saveSettings()"></div>
+      </div>
+      <div class="settings-card">
+        <h3>🧪 בדיקת התראה</h3>
+        <div class="setting-row">
+          <span>שלח התראת בדיקה</span>
+          <button onclick="testPush()" style="padding:7px 14px;font-size:12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--bg)">שלח</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
