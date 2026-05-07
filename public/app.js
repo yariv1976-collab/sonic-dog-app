@@ -20,6 +20,7 @@ async function init() {
       if (b.textContent.trim() === currentPerson) b.classList.add('active');
     });
   }
+  checkCalendarStatuses();
 }
 
 async function loadSchedule() {
