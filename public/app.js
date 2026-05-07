@@ -26,14 +26,21 @@ async function loadSchedule() {
   try {
     const r = await fetch('/api/schedule');
     schedule = await r.json();
+    localStorage.setItem('sonic_schedule', JSON.stringify(schedule));
   } catch {
-    schedule = {
-      morning: ['יובל','יובל','עומר','הורים','עומר','עומר','יובל'],
-      noon:    ['יובל','עומר','עומר','יובל','עומר','יובל','עומר'],
-      evening: ['יובל','עומר','יובל','יובל','עומר','יובל','עומר'],
-      teeth:   ['עומר','עומר','עומר','עומר','עומר','עומר','עומר'],
-      sleep:   ['יובל','יובל','עומר','הורים','עומר','עומר','יובל'],
-    };
+    // Try localStorage cache first
+    const cached = localStorage.getItem('sonic_schedule');
+    if (cached) {
+      schedule = JSON.parse(cached);
+    } else {
+      schedule = {
+        morning: ['יובל','יובל','עומר','הורים','עומר','עומר','יובל'],
+        noon:    ['יובל','עומר','עומר','יובל','עומר','יובל','עומר'],
+        evening: ['יובל','עומר','יובל','יובל','עומר','יובל','עומר'],
+        teeth:   ['עומר','עומר','עומר','עומר','עומר','עומר','עומר'],
+        sleep:   ['יובל','יובל','עומר','הורים','עומר','עומר','יובל'],
+      };
+    }
   }
 }
 

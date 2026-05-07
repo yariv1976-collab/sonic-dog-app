@@ -111,13 +111,18 @@ function getNextWeekDates() {
 }
 
 function makeEventTime(date, hour, min) {
-  const start = new Date(date);
-  start.setHours(hour, min, 0, 0);
-  const end = new Date(start);
-  end.setMinutes(end.getMinutes() + 30);
+  // Format as local time string to avoid UTC conversion issues
+  const pad = n => String(n).padStart(2,'0');
+  const y = date.getFullYear();
+  const mo = pad(date.getMonth()+1);
+  const d = pad(date.getDate());
+  const endMin = (min + 30) % 60;
+  const endHour = hour + Math.floor((min + 30) / 60);
+  const startStr = y + '-' + mo + '-' + d + 'T' + pad(hour) + ':' + pad(min) + ':00';
+  const endStr   = y + '-' + mo + '-' + d + 'T' + pad(endHour) + ':' + pad(endMin) + ':00';
   return {
-    start: { dateTime: start.toISOString(), timeZone: 'Asia/Jerusalem' },
-    end:   { dateTime: end.toISOString(),   timeZone: 'Asia/Jerusalem' },
+    start: { dateTime: startStr, timeZone: 'Asia/Jerusalem' },
+    end:   { dateTime: endStr,   timeZone: 'Asia/Jerusalem' },
   };
 }
 
