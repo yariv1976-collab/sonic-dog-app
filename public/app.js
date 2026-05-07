@@ -339,3 +339,19 @@ async function checkCalendarStatuses() {
 function connectCalendar(person) {
   window.location.href = '/api/auth/google/' + encodeURIComponent(person);
 }
+
+// ─── Save as permanent default ────────────────────────────────────────────────
+async function saveAsDefault() {
+  try {
+    showToast('שומר...');
+    const r = await fetch('/api/schedule/save-default', { method: 'POST' });
+    const d = await r.json();
+    if (d.ok) {
+      showToast('✅ הלוח נשמר כבסיס קבוע!');
+    } else {
+      showToast('שגיאה: ' + d.error);
+    }
+  } catch(e) {
+    showToast('שגיאה בשמירה');
+  }
+}

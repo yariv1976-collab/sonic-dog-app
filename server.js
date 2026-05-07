@@ -22,6 +22,8 @@ const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID     || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const BASE_URL             = process.env.BASE_URL || 'https://sonic-dog-app.onrender.com';
 const REDIRECT_URI         = BASE_URL + '/api/auth/google/callback';
+const RENDER_API_KEY       = process.env.RENDER_API_KEY || '';
+const RENDER_SERVICE_ID    = process.env.RENDER_SERVICE_ID || '';
 
 function createOAuthClient() {
   return new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URI);
@@ -39,19 +41,29 @@ function saveTokens(d)  { fs.writeFileSync(TOKENS_FILE, JSON.stringify(d, null, 
 
 const DEFAULT_SCHEDULE = {
   morning: ['יובל','יובל','עומר','הורים','עומר','עומר','יובל'],
-  noon:    ['יובל','עומר','עומר','יובל','עומר','יובל','עומר'],
+  noon:    ['עומר','הורים','עומר','יובל','עומר','יובל','עומר'],
   evening: ['יובל','עומר','יובל','יובל','עומר','יובל','עומר'],
   teeth:   ['עומר','עומר','עומר','עומר','עומר','עומר','עומר'],
-  sleep:   ['יובל','יובל','עומר','הורים','עומר','עומר','יובל'],
+  sleep:   ['יובל','יובל','עומר','יובל','עומר','עומר','יובל'],
 };
-function loadSchedule() { try { return JSON.parse(fs.readFileSync(SCHEDULE_FILE,'utf8')); } catch { return JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)); } }
-function saveSchedule(d){ fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(d, null, 2)); }
+function loadSchedule() {
+  // First try env var (permanent), then file (temporary), then default
+  if (process.env.SCHEDULE_DATA) {
+    try { return JSON.parse(process.env.SCHEDULE_DATA); } catch {}
+  }
+  try { return JSON.parse(fs.readFileSync(SCHEDULE_FILE,'utf8')); } catch {}
+  return JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+}
+function saveSchedule(d){
+  try { fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(d, null, 2)); } catch {}
+  // Note: to make permanent, update SCHEDULE_DATA env var in Render
+}
 let scheduleData = loadSchedule();
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const PHONES = { 'יובל':'972584997372','עומר':'972584271372','יריב':'972542271372','שירה':'972544997372' };
-const TASK_LABELS = { morning:'הוצאת בוקר', noon:'הוצאת צהריים', evening:'הוצאת ערב', teeth:'צחצוח שיניים' };
-const TIMES = { morning:{h:8,m:0}, noon:{h:14,m:30}, evening:{h:20,m:0}, teeth:{h:21,m:0} };
+const TASK_LABELS = { morning:'הוצאת בוקר', noon:'הוצאת צהריים', evening:'הוצאת ערב', teeth:'צחצוח שיניים', sleep:'שינה' };
+const TIMES = { morning:{h:8,m:0}, noon:{h:14,m:30}, evening:{h:20,m:0}, teeth:{h:21,m:0}, sleep:{h:22,m:0} };
 const DAYS_HE = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 // Map person name to Google account email
 const PERSON_EMAILS = {
@@ -135,7 +147,7 @@ async function syncCalendarForPerson(personName) {
   const calendar = google.calendar({ version: 'v3', auth: oauth2 });
 
   const dates = getNextWeekDates();
-  const tasks = ['morning','noon','evening','teeth'];
+  const tasks = ['morning','noon','evening','teeth','sleep'];
   const created = [];
 
   // Delete old sonic events first
@@ -259,6 +271,52 @@ app.post('/api/test-push', async (req, res) => {
   if (!(subs[person] || []).length) return res.status(404).json({ error: 'no subscription for this person' });
   await sendPushToPerson(person, '🐕 בדיקה!', 'זוהי הודעת בדיקה לסוניק עבור ' + person, '');
   res.json({ ok: true });
+});
+
+// Save schedule as permanent default via Render API
+app.post('/api/schedule/save-default', async (req, res) => {
+  if (!RENDER_API_KEY || !RENDER_SERVICE_ID) {
+    return res.status(500).json({ error: 'Render API not configured' });
+  }
+  try {
+    const scheduleJson = JSON.stringify(scheduleData);
+    // Get current env vars
+    const getRes = await fetch('https://api.render.com/v1/services/' + RENDER_SERVICE_ID + '/env-vars', {
+      headers: { 'Authorization': 'Bearer ' + RENDER_API_KEY, 'Accept': 'application/json' }
+    });
+    const envVars = await getRes.json();
+    
+    // Build updated env vars list
+    const updated = envVars.map(e => e.envVar ? e.envVar : e).map(e => ({
+      key: e.key,
+      value: e.key === 'SCHEDULE_DATA' ? scheduleJson : e.value
+    }));
+    
+    // If SCHEDULE_DATA doesn't exist, add it
+    if (!updated.find(e => e.key === 'SCHEDULE_DATA')) {
+      updated.push({ key: 'SCHEDULE_DATA', value: scheduleJson });
+    }
+    
+    // Update env vars
+    const putRes = await fetch('https://api.render.com/v1/services/' + RENDER_SERVICE_ID + '/env-vars', {
+      method: 'PUT',
+      headers: { 
+        'Authorization': 'Bearer ' + RENDER_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(updated)
+    });
+    
+    if (putRes.ok) {
+      res.json({ ok: true, message: 'הלוח נשמר כבסיס קבוע!' });
+    } else {
+      const err = await putRes.text();
+      res.status(500).json({ error: err });
+    }
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
